@@ -69,6 +69,76 @@ const authController = {
       }
     },
   },
+
+  forgotPassword: {
+    validation: Joi.object({
+      email: Joi.string().email().required(),
+    }),
+    handler: async (req, res) => {
+      try {
+        const { email } = req.body;
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+          return res.status(404).json({ success: false, message: "User not found", data: null, error: "User not found" });
+        }
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.reset_token = otp;
+        await user.save();
+        // Send OTP email using Brevo
+        const emailSent = await sendResetEmail(user.email, otp);
+        if (!emailSent) {
+          return res.status(500).json({ success: false, message: "Failed to send OTP email", data: null, error: "Email error" });
+        }
+        return res.status(200).json({ success: true, message: "OTP sent to email", data: null, error: null });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Server Error", data: null, error: error.message });
+      }
+    },
+  },
+  verifyOtp: {
+    validation: Joi.object({
+      email: Joi.string().email().required(),
+      otp: Joi.string().length(6).required(),
+    }),
+    handler: async (req, res) => {
+      try {
+        const { email, otp } = req.body;
+        const user = await User.findOne({ where: { email } });
+        if (!user || user.reset_token !== otp) {
+          return res.status(400).json({ success: false, message: "Invalid OTP or email", data: null, error: "Invalid OTP or email" });
+        }
+        // Optionally, you can clear the OTP here or set a flag for verified
+        return res.status(200).json({ success: true, message: "OTP verified", data: null, error: null });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Server Error", data: null, error: error.message });
+      }
+    },
+  },
+  changePassword: {
+    validation: Joi.object({
+      email: Joi.string().email().required(),
+      newPassword: Joi.string().min(6).required(),
+    }),
+    handler: async (req, res) => {
+      try {
+        const { email, newPassword } = req.body;
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+          return res.status(404).json({ success: false, message: "User not found", data: null, error: "User not found" });
+        }
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.reset_token = null;
+        await user.save();
+        return res.status(200).json({ success: true, message: "Password changed successfully", data: null, error: null });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Server Error", data: null, error: error.message });
+      }
+    },
+  },
 };
 
 
