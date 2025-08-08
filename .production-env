@@ -1,0 +1,19 @@
+# Server Configuration
+PORT=5000
+
+# JWT Authentication
+JWT_SECRET=secret
+
+# PostgreSQL Database Credentials (Local Setup)
+DB_HOST=cliniclyf-db.cv22qm8w4neo.ap-south-1.rds.amazonaws.com
+DB_PORT=5432
+DB_USER=admin123       # Default PostgreSQL username
+DB_PASSWORD=admin123
+DB_NAME=cliniclyf
+
+# Razorpay Credentials (Replace with actual values)
+RAZORPAY_KEY_ID=your_razorpay_key
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+
+
+ADMIN_ROLE_ID="d07d1547-7260-4b69-b11c-0f23c580bce1"
